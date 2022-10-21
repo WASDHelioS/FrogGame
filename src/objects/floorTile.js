@@ -1,6 +1,6 @@
 class FloorTile extends GameObject
 {
-
+    //r
     g_target_y = 0;
 
     constructor (x, y, sprite, layer) 
