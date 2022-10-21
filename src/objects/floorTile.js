@@ -11,11 +11,13 @@ class FloorTile extends GameObject
         this.g_target_y = y;
         this.posScaleY = 0;
 
+        this.collider.enabled = false;
+
         new TWEEN.Tween(this)
             .to({ posScaleY: 1 }, 800)
             .easing(TWEEN.Easing.Elastic.Out)
-            .start();
-        this.collider.enabled = false;
+            .start()
+            .onComplete(() => this.collider.enabled = true);
     }
 
     update (deltaTime)
@@ -35,7 +37,6 @@ class FloorTile extends GameObject
         if (this.transform.position.y != this.g_target_y)
         {
             this.transform.position.y = this.g_target_y * this.posScaleY;
-            this.collider.enabled = true;
         }
     }
 }

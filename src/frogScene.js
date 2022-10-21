@@ -22,9 +22,10 @@ class FrogScene extends Scene
     text_2_target_y;
 
     image_1_target_y;
-    image_1_rotation;
-    image_1_rotation_timer = -1.1;
-    image_1_rotation_ret;
+    image_1_rotation = -1;
+
+    spaceBarTween = null;
+    screenTween = null;
 
     constructor (x, y, width, height, displayMode = 0)
     {
@@ -39,6 +40,8 @@ class FrogScene extends Scene
         this.image_1_target_y = this.real_size.y * .45;
 
         this.doMenuScreenTween();
+
+        this.doSpaceBarTweenIn();
     }
 
     update (deltaTime)
@@ -52,23 +55,49 @@ class FrogScene extends Scene
         else
         {
             this.checkSpacebar();
-            this.updateAnimation(deltaTime);
             this.draw();
         }
     }
 
     reset ()
     {
+        if (this.spaceBarTween)
+        {
+            this.spaceBarTween.stop();
+            TWEEN.removeAll();
+            this.spaceBarTween = null;
+        }
+
         this.start = false;
         this.activeObjects.forEach(ao => ao.destroy());
 
         this.posScaleY = 0;
 
+        this.image_1_rotation = -1;
+        this.fruitSpawnRateMin = 1;
+        this.fruitSpawnRateMax = 2;
+        this.fruitSpawnTimer = 0;
+        this.gameSpeed = 1;
+
+        this.fruitsMax = 5;
+
+        this.fruits = [];
+        this.fruitPool = [];
+        this.eatenFruit = [];
+
         this.doMenuScreenTween();
+
+        this.doSpaceBarTweenIn();
     }
 
     startGame ()
     {
+        if (this.spaceBarTween)
+        {
+            this.spaceBarTween.stop();
+            TWEEN.removeAll();
+        }
+
         this.doAwayMenuScreenTween();
 
         let frog = new Frog(60, this.real_size.y - 50, this.game.images.frog_basic, 0);
@@ -183,20 +212,6 @@ class FrogScene extends Scene
         }
     }
 
-    updateAnimation (deltaTime)
-    {
-        if (this.image_1_rotation_timer > 1)
-            this.ret = true;
-        if (this.image_1_rotation_timer < -1)
-            this.ret = false;
-        if (!this.ret)
-            this.image_1_rotation_timer += deltaTime * 4;
-        if (this.ret)
-            this.image_1_rotation_timer -= deltaTime * 4;
-
-        this.image_1_rotation = Math.sin(this.image_1_rotation_timer) * 3;
-    }
-
     draw ()
     {
         super.draw();
@@ -212,23 +227,34 @@ class FrogScene extends Scene
             this.context.fillText("To Lick", this.real_size.x * .5 - (textData.width / 2) + 5, this.text_2_target_y * this.posScaleY, 72);
 
             let space = this.game.images.spacebar;
-            space.draw(this, this.real_size.x * .5, this.image_1_target_y * this.posScaleY, space.width, space.height, this.image_1_rotation, 0, 0, 1, 0);
+            space.draw(this, this.real_size.x * .5, this.image_1_target_y * this.posScaleY, space.width, space.height, this.image_1_rotation * 3, 0, 0, 1, 0);
         }
     }
 
     doMenuScreenTween ()
     {
-        new TWEEN.Tween(this)
+        this.screenTween = new TWEEN.Tween(this)
             .to({ posScaleY: 1 }, 800)
             .easing(TWEEN.Easing.Elastic.Out)
             .start();
     }
 
+    doSpaceBarTweenIn ()
+    {
+        this.spaceBarTween = new TWEEN.Tween(this)
+            .to({ image_1_rotation: 1 }, 500)
+            .easing(TWEEN.Easing.Sinusoidal.InOut)
+            .yoyo(true)
+            .repeat(Infinity)
+            .start();
+    }
+
+
     doAwayMenuScreenTween ()
     {
-        new TWEEN.Tween(this)
+        this.screenTween
             .to({ posScaleY: 2.5 }, 800)
-            .easing(TWEEN.Easing.Elastic.Out)
+            .easing(TWEEN.Easing.Elastic.InOut)
             .start();
     }
 

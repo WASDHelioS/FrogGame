@@ -33,7 +33,7 @@ class Frog extends GameObject
     constructor (x, y, sprite, layer) 
     {
         super(x, y, sprite, layer);
-        this.collider.enabled = true;
+        this.collider.enabled = false;
 
         this.transform.position.y = 0;
         this.g_target_y = y;
@@ -42,7 +42,8 @@ class Frog extends GameObject
         new TWEEN.Tween(this)
             .to({ posScaleY: 1 }, 800)
             .easing(TWEEN.Easing.Elastic.Out)
-            .start();
+            .start()
+            .onComplete(() => this.collider.enabled = true);
     }
 
     addedToScene ()
