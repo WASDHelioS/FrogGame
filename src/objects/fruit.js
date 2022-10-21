@@ -15,6 +15,11 @@ class Fruit extends GameObject
         this.collider.enabled = true;
     }
 
+    onDestroy ()
+    {
+        this.scene.addObject(new FloorTileDestroyer(this.transform.position.x, this.transform.position.y, this.scene.game.images.tile_floor_explosion, 0, .05, true));
+    }
+
     onCollision (obj)
     {
         if (obj instanceof FloorTile)
