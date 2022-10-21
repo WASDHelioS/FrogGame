@@ -55,7 +55,6 @@ class FrogScene extends Scene
         else
         {
             this.checkSpacebar();
-            this.draw();
         }
     }
 

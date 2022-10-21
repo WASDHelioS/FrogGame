@@ -6,6 +6,8 @@
 class Game
 {
     activeScenes = [];
+    pendingRemoval = [];
+
     previousStep = 0; //used for calculating deltaTime
 
     images = {};
@@ -98,6 +100,16 @@ class Game
         scene.onLoad();
     }
 
+    removeScene (scene)
+    {
+        let index = this.activeScenes.indexOf(scene);
+        if (index >= 0 && !scene.destroyed)
+        {
+            if (!this.pendingRemoval.contains(index))
+                this.pendingRemoval.push(index);
+        }
+    }
+
     update ()
     {
         this.previousStep = this.previousStep || 0;
@@ -115,11 +127,29 @@ class Game
             this.activeScenes[i].draw();
         }
 
+        this.cleanActiveScenes();
+
         this.previousStep = stepTime;
 
         TWEEN.update();
 
         requestAnimationFrame(this.update);
+    }
+
+    cleanActiveScenes ()
+    {
+        if (this.pendingRemoval.length > 0)
+        {
+            this.pendingRemoval.sort((a, b) => a - b);
+
+            for (let i = this.pendingRemoval.length - 1; i >= 0; i--)
+            {
+                if (this.activeScenes[this.pendingRemoval[i]].destroyed)
+                    this.activeScenes.removeAt(this.pendingRemoval[i]);
+
+                this.pendingRemoval.splice(i, 1);
+            }
+        }
     }
 }
 /*
@@ -320,19 +350,20 @@ class Collider
     {
         if (this.enabled)
         {
-            let pressed = GameInput.mousePressed();
-            let held = GameInput.mouseHeld();
-            if (pressed.left || pressed.middle || pressed.right)
-            {
-                this.checkClick(true, pressed);
-            }
-
-            if (held.left || held.middle || held.right)
-            {
-                this.checkClick(false, held);
-            }
-
             this.checkCollisions();
+        }
+
+        let pressed = GameInput.mousePressed();
+        let held = GameInput.mouseHeld();
+
+        if (pressed.left || pressed.middle || pressed.right)
+        {
+            this.checkClick(true, pressed);
+        }
+
+        if (held.left || held.middle || held.right)
+        {
+            this.checkClick(false, held);
         }
     }
 
@@ -614,12 +645,64 @@ class Renderer
  */ 
 class Transform
 {
-    position = null;
-    scale = null;
+    get position ()
+    {
+        if (!this.g_position)
+            this.g_position = new vector(0, 0);
+
+        return this.g_position;
+    }
+
+    set position (v)
+    {
+        if (!this.g_position)
+            this.g_position = new vector(v.x, v.y);
+
+        this.g_position.x = v.x;
+        this.g_position.y = v.y;
+    }
+
+    get scale ()
+    {
+        if (!this.g_scale)
+            this.g_scale = new vector(0, 0);
+
+        return this.g_scale;
+    }
+
+    set scale (v)
+    {
+        if (!this.g_scale)
+            this.g_scale = new vector(v.x, v.y);
+
+        this.g_scale.x = v.x;
+        this.g_scale.y = v.y;
+    }
+
+    get velocity ()
+    {
+        if (!this.g_velocity)
+            this.g_velocity = new vector(0, 0);
+
+        return this.g_velocity;
+    }
+
+    set velocity (v)
+    {
+        if (!this.g_velocity)
+            this.g_velocity = new vector(v.x, v.y);
+
+        this.g_velocity.x = v.x;
+        this.g_velocity.y = v.y;
+    }
+
+    g_position = null;
+
+    g_scale = null;
     rotation = 0;
     gameObject = null;
 
-    velocity = null;
+    g_velocity = null;
     angularVelocity = 0;
 
     get size ()
@@ -759,10 +842,17 @@ class Scene
 
     destroy ()
     {
-        this.destroyed = true;
-        for (var i = 0; i < this.activeObjects.length; i++)
+        if (!this.destroyed)
         {
-            this.activeObjects[i].destroy();
+            for (var i = 0; i < this.activeObjects.length; i++)
+            {
+                this.activeObjects[i].destroy();
+            }
+            this.game.removeScene(this);
+
+            this.context.clearRect(0, 0, this.real_size.x, this.real_size.y);
+
+            this.destroyed = true;
         }
     }
 
@@ -2265,7 +2355,7 @@ class Ray
  */ 
 // Basic event listeners, modeled after Phaser Signals
 
-class signal
+class Signal
 {
     listeners = [];
 
