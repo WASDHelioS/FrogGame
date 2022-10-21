@@ -1,6 +1,9 @@
 class Fruit extends GameObject
 {
     speed = 10;
+    speedCap = 100;
+
+    active = true;
 
     constructor (x, y, sprite, layer)
     {
@@ -25,11 +28,19 @@ class Fruit extends GameObject
     {
         super.update(deltaTime);
 
-        this.transform.position.y += this.speed * this.scene.gameSpeed * this.scene.gameSpeed * deltaTime;
-
-        if (this.transform.position.y > this.scene.real_size.y)
+        if (this.active)
         {
-            this.scene.destroyFruit(this);
+            this.transform.position.y += this.speed * deltaTime;
+
+            if (this.transform.position.y > this.scene.real_size.y)
+            {
+                this.scene.destroyFruit(this);
+            }
         }
+    }
+
+    updateSpeed (val)
+    {
+        this.speed = Math.min(this.speedCap, val);
     }
 }

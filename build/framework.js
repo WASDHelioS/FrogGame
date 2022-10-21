@@ -815,7 +815,7 @@ class Scene
 
         if (this.pendingRemoval.length)
         {
-            this.pendingRemoval.sort();
+            this.pendingRemoval.sort((a, b) => a - b);
 
             for (let i = this.pendingRemoval.length - 1; i >= 0; i--) 
             {

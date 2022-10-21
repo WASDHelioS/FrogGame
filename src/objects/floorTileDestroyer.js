@@ -20,7 +20,8 @@ class FloorTileDestroyer extends GameObject
         this.timer += deltaTime;
         if (this.timer > this.timeOfDestroy) 
         {
-            this.destroy();
+            if (!this.destroyed)
+                this.destroy();
         }
     }
 }

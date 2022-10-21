@@ -7,8 +7,8 @@ class Frog extends GameObject
 
     facing =
         {
-            left: -.8,
-            right: .8
+            left: -.9,
+            right: .9
         };
 
     currentFacing = this.facing.right;
@@ -28,10 +28,21 @@ class Frog extends GameObject
 
     tongue_obj_ref = null;
 
+    g_target_y = 0;
+
     constructor (x, y, sprite, layer) 
     {
         super(x, y, sprite, layer);
         this.collider.enabled = true;
+
+        this.transform.position.y = 0;
+        this.g_target_y = y;
+        this.posScaleY = 0;
+
+        new TWEEN.Tween(this)
+            .to({ posScaleY: 1 }, 800)
+            .easing(TWEEN.Easing.Elastic.Out)
+            .start();
     }
 
     addedToScene ()
@@ -42,7 +53,10 @@ class Frog extends GameObject
 
     onCollision (obj) 
     {
-        // todo: todo
+        if (obj instanceof Fruit)
+        {
+            this.scene.reset();
+        }
     }
 
     isFloor () 
@@ -59,6 +73,7 @@ class Frog extends GameObject
     {
         super.update(deltaTime);
 
+        this.animate();
         this.idle = true;
 
         if (this.tongue_retracted) 
@@ -205,7 +220,7 @@ class Frog extends GameObject
 
     getXOffset (facing) 
     {
-        return facing > 0 ? 8 : -8;
+        return facing > 0 ? 9 : -9;
     }
 
     canMove (nextPos) 
@@ -303,10 +318,10 @@ class Frog extends GameObject
         this.frog_tongue_base.draw(
             this.scene,
             (this.transform.position.x + this.tongueVector.x + this.getXOffset(this.currentFacing)) / 2, (this.transform.position.y + this.tongueVector.y) / 2,
-            this.frog_tongue_base.width * (this.tongueLength / 12.5), this.frog_tongue_base.height,
+            this.frog_tongue_base.width * (this.tongueLength / 12), this.frog_tongue_base.height,
             dir.toAngle() - 90, 0, 0, 1, 0);
 
-        if (this.should_bounce) 
+        if (this.should_bounce && this.tongueVectorBounce) 
         {
             dir = new vector(this.opposite_facing, -1);
 
@@ -318,8 +333,17 @@ class Frog extends GameObject
             this.frog_tongue_base.draw(
                 this.scene,
                 (this.tongueVectorBounceOrigin.x + this.tongueVectorBounce.x) / 2, (this.tongueVectorBounceOrigin.y + this.tongueVectorBounce.y) / 2,
-                this.frog_tongue_base.width * (this.tongueLengthBounce / 12.5), this.frog_tongue_base.height,
+                this.frog_tongue_base.width * (this.tongueLengthBounce / 12), this.frog_tongue_base.height,
                 dir.toAngle() - 90, 0, 0, 1, 0);
+        }
+    }
+
+
+    animate ()
+    {
+        if (this.transform.position.y != this.g_target_y)
+        {
+            this.transform.position.y = this.g_target_y * this.posScaleY;
         }
     }
 }
