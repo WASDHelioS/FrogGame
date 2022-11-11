@@ -46,11 +46,19 @@ class FrogScene extends Scene
 
     update (deltaTime)
     {
-        super.update(deltaTime);
+        if (!this.paused)
+        {
+            super.update(deltaTime);
+        }
 
         if (this.start)
         {
-            this.spawnFruits(deltaTime);
+            this.checkEscape();
+
+            if (!this.paused)
+            {
+                this.spawnFruits(deltaTime);
+            }
         }
         else
         {
@@ -68,6 +76,7 @@ class FrogScene extends Scene
         }
 
         this.start = false;
+        this.paused = false;
         this.activeObjects.forEach(ao => ao.destroy());
 
         this.posScaleY = 0;
@@ -87,6 +96,27 @@ class FrogScene extends Scene
         this.doMenuScreenTween();
 
         this.doSpaceBarTweenIn();
+    }
+
+    pauseGame ()
+    {
+        this.paused = true;
+
+        this.doMenuScreenTween();
+    }
+
+    unPauseGame ()
+    {
+        this.doAwayMenuScreenTween();
+    }
+
+    checkEscape ()
+    {
+        if (GameInput.isPressed(GameInput.keys.Escape))
+        {
+
+            this.paused ? this.unPauseGame() : this.pauseGame();
+        }
     }
 
     startGame ()
@@ -215,18 +245,35 @@ class FrogScene extends Scene
     {
         super.draw();
 
-        if (this.posScaleY < 2)
+        this.drawMenu();
+    }
+
+    drawMenu ()
+    {
+        if (!this.paused)
+        {
+            if (this.posScaleY < 2)
+            {
+                this.context.font = "20px Monospace";
+                this.context.fillStyle = "black"; // sets the color to fill in the rectangle with
+
+                let textData = this.context.measureText("Press");
+                this.context.fillText("Press", this.real_size.x * .5 - (textData.width / 2), this.text_1_target_y * this.posScaleY, 72);
+
+                textData = this.context.measureText("To Start");
+                this.context.fillText("To Lick", this.real_size.x * .5 - (textData.width / 2) + 5, this.text_2_target_y * this.posScaleY, 72);
+
+                let space = this.game.images.spacebar;
+                space.draw(this, this.real_size.x * .5, this.image_1_target_y * this.posScaleY, space.width, space.height, this.image_1_rotation * 3, 0, 0, 1, 0);
+            }
+        }
+        else
         {
             this.context.font = "20px Monospace";
+            this.context.fillStyle = "black"; // sets the color to fill in the rectangle with
 
-            let textData = this.context.measureText("Press");
-            this.context.fillText("Press", this.real_size.x * .5 - (textData.width / 2), this.text_1_target_y * this.posScaleY, 72);
-
-            textData = this.context.measureText("To Start");
-            this.context.fillText("To Lick", this.real_size.x * .5 - (textData.width / 2) + 5, this.text_2_target_y * this.posScaleY, 72);
-
-            let space = this.game.images.spacebar;
-            space.draw(this, this.real_size.x * .5, this.image_1_target_y * this.posScaleY, space.width, space.height, this.image_1_rotation * 3, 0, 0, 1, 0);
+            let textData = this.context.measureText("Paused");
+            this.context.fillText("Paused", this.real_size.x * .5 - (textData.width / 2), this.text_1_target_y * this.posScaleY * 2, 72);
         }
     }
 
@@ -251,10 +298,11 @@ class FrogScene extends Scene
 
     doAwayMenuScreenTween ()
     {
-        this.screenTween
+        this.screenTween = new TWEEN.Tween(this)
             .to({ posScaleY: 2.5 }, 800)
             .easing(TWEEN.Easing.Elastic.InOut)
-            .start();
+            .start().onComplete(() => this.paused = false);
+
     }
 
 }
